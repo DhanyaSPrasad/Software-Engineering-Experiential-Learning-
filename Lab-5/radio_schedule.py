@@ -18,11 +18,48 @@ def slot_label(show, host):
 
 
 
+
 def overlap_free(formula):
+    """Check a basic arithmetic comparison safely."""
+    import ast
+    import operator
+
+    operators = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.Lt: operator.lt,
+        ast.LtE: operator.le,
+        ast.Gt: operator.gt,
+        ast.GtE: operator.ge,
+        ast.Eq: operator.eq,
+        ast.NotEq: operator.ne,
+    }
+
+    def evaluate(node):
+        if isinstance(node, ast.Expression):
+            return evaluate(node.body)
+        if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+            return node.value
+        if isinstance(node, ast.BinOp) and type(node.op) in operators:
+            return operators[type(node.op)](
+                evaluate(node.left), evaluate(node.right)
+            )
+        if isinstance(node, ast.Compare) and len(node.ops) == 1:
+            operation = operators.get(type(node.ops[0]))
+            if operation is None:
+                raise ValueError("Unsupported comparison")
+            return operation(
+                evaluate(node.left), evaluate(node.comparators[0])
+            )
+        raise ValueError("Unsupported expression")
+
     try:
-        return eval(formula)
-    except Exception:
+        return bool(evaluate(ast.parse(formula, mode="eval")))
+    except (SyntaxError, ValueError, TypeError, ZeroDivisionError):
         return False
+
 
 
 def morning_shows():
