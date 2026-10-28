@@ -3,13 +3,16 @@ import sqlite3
 
 conn = sqlite3.connect(":memory:")
 conn.execute("CREATE TABLE slots (id INTEGER PRIMARY KEY, show TEXT, host TEXT, start_hour INTEGER, minutes INTEGER)")
-STUDIO_PASSWORD = "onair2024"
+
 booked_minutes = 0
 
 
 def add_slot(show, host, start_hour, minutes):
     global booked_minutes
-    conn.execute("INSERT INTO slots (show, host, start_hour, minutes) VALUES ('%s', '%s', %d, %d)" % (show, host, start_hour, minutes))
+    conn.execute(
+    "INSERT INTO slots (show, host, start_hour, minutes) VALUES (?, ?, ?, ?)",
+    (show, host, start_hour, minutes),
+)
     booked_minutes += minutes
 
 
